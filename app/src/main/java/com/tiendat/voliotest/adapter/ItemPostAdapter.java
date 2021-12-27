@@ -1,14 +1,10 @@
 package com.tiendat.voliotest.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import android.content.Intent;
-import android.graphics.Color;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +12,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -25,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.tiendat.voliotest.R;
 import com.tiendat.voliotest.activity.DetailActivity;
-import com.tiendat.voliotest.activity.MainActivity;
 import com.tiendat.voliotest.api.Item;
 import com.tiendat.voliotest.databinding.ItemTypeOneBinding;
 import com.tiendat.voliotest.databinding.ItemTypeThreeBinding;
@@ -37,9 +32,9 @@ import java.util.Date;
 
 public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHolder>{
 
-    private Context context;
-    private ArrayList<Item> items;
-    private int parentWidth;
+    private final Context context;
+    private final ArrayList<Item> items;
+    private final int parentWidth;
 
     private final int TYPE_ONE = 1;
     private final int TYPE_TWO = 2;
@@ -216,8 +211,7 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
         itemDate.add(Integer.parseInt(itemTimeString.split(":")[1]));
         itemDate.add(Integer.parseInt(itemTimeString.split(":")[2]));
         Date currentTime = Calendar.getInstance().getTime();
-        String currentDateString = new android.text.format.DateFormat()
-                .format("yyyy-MM-dd-HH-mm-ss", currentTime).toString();
+        String currentDateString = DateFormat.format("yyyy-MM-dd-HH-mm-ss", currentTime).toString();
         for (int i = 0 ; i < 6 ; i++){
             currentDate.add(Integer.parseInt(currentDateString.split("-")[i]));
         }
@@ -229,7 +223,7 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
                 currentDate.set(i - 1, currentDate.get(i - 1) - 1);
             }
         }
-        for (int i = temp.size() - 1 ; i >= 0 ; i ++){
+        for (int i = temp.size() - 1 ; i >= 0 ; i --){
             if (temp.get(i) != 0){
                 switch (i){
                     case 5:
@@ -257,12 +251,12 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
         return result;
     }
 
+    @SuppressLint("DefaultLocale")
     private String getStringDuration(int duration){
         int min = duration / 60000;
         int sec = (duration % 60000) / 1000;
         int millis = ((duration % 60000) % 1000) / 10;
-        String durationString = String.format("%02d" , min) + ":" + String.format("%02d" , sec) + ":" + String.format("%02d" , millis);
-        return durationString;
+        return String.format("%02d" , min) + ":" + String.format("%02d" , sec) + ":" + String.format("%02d" , millis);
     }
 
     private void goToDetail(){

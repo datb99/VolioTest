@@ -1,28 +1,23 @@
 package com.tiendat.voliotest.activity;
 
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
 
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 
-import com.google.gson.Gson;
+
+
 import com.tiendat.voliotest.R;
 import com.tiendat.voliotest.adapter.DetailAdapter;
-import com.tiendat.voliotest.api.AllItems;
 import com.tiendat.voliotest.api.ApiService;
 import com.tiendat.voliotest.api.DetailContent;
 import com.tiendat.voliotest.api.DetailData;
-import com.tiendat.voliotest.api.Item;
 import com.tiendat.voliotest.api.Section;
 import com.tiendat.voliotest.databinding.ActivityDetailBinding;
-
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
@@ -46,12 +41,7 @@ public class DetailActivity extends AppCompatActivity {
 
         getData();
 
-        binding.buttonBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        binding.buttonBack.setOnClickListener(v -> onBackPressed());
 
     }
 
@@ -70,15 +60,15 @@ public class DetailActivity extends AppCompatActivity {
 
         retrofit.create(ApiService.class).getDetailData().enqueue(new Callback<DetailData>() {
             @Override
-            public void onResponse(Call<DetailData> call, Response<DetailData> response) {
+            public void onResponse(@NonNull Call<DetailData> call, @NonNull Response<DetailData> response) {
                 if (response.body() != null){
-                    data = (DetailData) response.body();
+                    data = response.body();
                     setupDetail();
                 }
             }
 
             @Override
-            public void onFailure(Call<DetailData> call, Throwable t) {
+            public void onFailure(@NonNull Call<DetailData> call, @NonNull Throwable t) {
 
             }
         });

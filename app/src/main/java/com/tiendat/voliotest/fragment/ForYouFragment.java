@@ -2,11 +2,11 @@ package com.tiendat.voliotest.fragment;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,8 +33,6 @@ public class ForYouFragment extends Fragment {
 
     private FragmentForYouBinding binding;
     private ArrayList<Item> items = new ArrayList<>();
-    private ItemPostAdapter adapter;
-
 
 
     public ForYouFragment() {
@@ -49,7 +47,7 @@ public class ForYouFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater,
                 R.layout.fragment_for_you,
@@ -60,8 +58,8 @@ public class ForYouFragment extends Fragment {
     }
 
     private void loadData(){
-        int cacheSize = 10 * 1024 * 1024; // 10 MB
-        Cache cache = new Cache(getContext().getCacheDir(), cacheSize);
+        int cacheSize = 10 * 1024 * 1024;
+        Cache cache = new Cache(requireContext().getCacheDir(), cacheSize);
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .cache(cache)
                 .build();
@@ -74,7 +72,7 @@ public class ForYouFragment extends Fragment {
 
         retrofit.create(ApiService.class).getAllItem().enqueue(new Callback<AllItems>() {
             @Override
-            public void onResponse(Call<AllItems> call, Response<AllItems> response) {
+            public void onResponse(@NonNull Call<AllItems> call, @NonNull Response<AllItems> response) {
                 if (response.body() != null){
                     items = (ArrayList<Item>)response.body().getItems();
                     setRecycle();
@@ -82,14 +80,14 @@ public class ForYouFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<AllItems> call, Throwable t) {
+            public void onFailure(@NonNull Call<AllItems> call, @NonNull Throwable t) {
 
             }
         });
     }
 
     private void setRecycle(){
-        adapter = new ItemPostAdapter(getContext() , items , binding.recycleView.getWidth());
+        ItemPostAdapter adapter = new ItemPostAdapter(getContext(), items, binding.recycleView.getWidth());
         binding.recycleView.setAdapter(adapter);
         binding.recycleView.setLayoutManager(new LinearLayoutManager(getActivity()));
     }

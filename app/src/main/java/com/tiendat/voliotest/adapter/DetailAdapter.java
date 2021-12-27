@@ -1,11 +1,10 @@
 package com.tiendat.voliotest.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.CountDownTimer;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -14,7 +13,6 @@ import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +20,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.MediaController;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,17 +38,13 @@ import com.tiendat.voliotest.databinding.ItemDetailTypeOneBinding;
 import com.tiendat.voliotest.databinding.ItemDetailTypeThreeBinding;
 import com.tiendat.voliotest.databinding.ItemDetailTypeTwoBinding;
 
-import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
-
 
 public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder>{
 
-    private Context context;
-    private DetailData data;
-    private int parentWidth;
-    private DetailActivity activity;
+    private final Context context;
+    private final DetailData data;
+    private final int parentWidth;
+    private final DetailActivity activity;
 
     private final int TEXT_TYPE = 1;
     private final int VIDEO_TYPE = 2;
@@ -70,10 +62,6 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         switch (viewType){
-            case TITLE_TYPE:
-                ItemDetailTypeFourBinding bindingTitle = ItemDetailTypeFourBinding
-                        .inflate(LayoutInflater.from(parent.getContext()) , parent , false);
-                return new TitleViewHolder(bindingTitle);
             case TEXT_TYPE:
                 ItemDetailTypeOneBinding bindingText = ItemDetailTypeOneBinding
                         .inflate(LayoutInflater.from(parent.getContext()) , parent , false);
@@ -86,8 +74,12 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
                 ItemDetailTypeThreeBinding bindingImg = ItemDetailTypeThreeBinding
                         .inflate(LayoutInflater.from(parent.getContext()) , parent , false);
                 return new ImgViewHolder(bindingImg);
+            default:
+                ItemDetailTypeFourBinding bindingTitle = ItemDetailTypeFourBinding
+                        .inflate(LayoutInflater.from(parent.getContext()) , parent , false);
+                return new TitleViewHolder(bindingTitle);
         }
-        return null;
+
     }
 
     @Override
@@ -150,68 +142,58 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
                 videoViewHolder.playButton.setVisibility(View.INVISIBLE);
                 videoViewHolder.loadCircle.setVisibility(View.VISIBLE);
                 videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
-                videoViewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (videoViewHolder.customMediaController.getVisibility() == View.VISIBLE){
-                            videoViewHolder.customMediaController.setVisibility(View.INVISIBLE);
-                        }else {
-                            videoViewHolder.customMediaController.setVisibility(View.VISIBLE);
-                        }
+                videoViewHolder.linearLayout.setOnClickListener(v -> {
+                    if (videoViewHolder.customMediaController.getVisibility() == View.VISIBLE){
+                        videoViewHolder.customMediaController.setVisibility(View.INVISIBLE);
+                    }else {
+                        videoViewHolder.customMediaController.setVisibility(View.VISIBLE);
                     }
                 });
-                videoViewHolder.stopButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (videoViewHolder.videoView.isPlaying()){
-                            videoViewHolder.videoView.pause();
+                videoViewHolder.stopButton.setOnClickListener(v -> {
+                    videoViewHolder.videoView.pause();
+                    videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
+                });
+                videoViewHolder.videoView.setOnPreparedListener(mp -> {
+                    int height = parentWidth * mp.getVideoHeight() / mp.getVideoWidth();
+                    videoViewHolder.container.setLayoutParams(new LinearLayout.LayoutParams(parentWidth , height));
+                    videoViewHolder.durationTime.setText(getStringDuration(videoViewHolder.videoView.getDuration()));
+                    videoViewHolder.loadCircle.setVisibility(View.GONE);
+                    videoViewHolder.playButton.setVisibility(View.VISIBLE);
+                    videoViewHolder.playButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            playVideo(videoViewHolder);
+                        }
+                    });
+                    videoViewHolder.videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
                             videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
+                            videoViewHolder.loadCircle.setVisibility(View.GONE);
+                            videoViewHolder.customMediaController.setVisibility(View.GONE);
                         }
-                    }
-                });
-                videoViewHolder.videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mp) {
-                        int height = parentWidth * mp.getVideoHeight() / mp.getVideoWidth();
-                        videoViewHolder.container.setLayoutParams(new LinearLayout.LayoutParams(parentWidth , height));
-                        videoViewHolder.durationTime.setText(getStringDuration(videoViewHolder.videoView.getDuration()));
-                        videoViewHolder.loadCircle.setVisibility(View.GONE);
-                        videoViewHolder.playButton.setVisibility(View.VISIBLE);
-                        videoViewHolder.videoView.seekTo(videoViewHolder.getLastPos());
-                        videoViewHolder.playButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                playVideo(videoViewHolder);
-                            }
-                        });
-                        videoViewHolder.videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mp) {
-                                videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
-                                videoViewHolder.loadCircle.setVisibility(View.GONE);
-                                videoViewHolder.customMediaController.setVisibility(View.GONE);
-                            }
-                        });
-                        videoViewHolder.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                            @Override
-                            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                                int position = progress * videoViewHolder.videoView.getDuration() / 100;
-                                videoViewHolder.currentTime.setText(getStringDuration(position));
-                            }
+                    });
+                    videoViewHolder.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            int position1 = progress * videoViewHolder.videoView.getDuration() / 100;
+                            videoViewHolder.currentTime.setText(getStringDuration(position1));
+                        }
 
-                            @Override
-                            public void onStartTrackingTouch(SeekBar seekBar) {
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {
+                            videoViewHolder.isUpdate = false;
+                        }
 
-                            }
-
-                            @Override
-                            public void onStopTrackingTouch(SeekBar seekBar) {
-                                int position = seekBar.getProgress() * videoViewHolder.videoView.getDuration() / 100;
-                                videoViewHolder.videoView.seekTo(position);
-                                videoViewHolder.videoView.start();
-                            }
-                        });
-                    }
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {
+                            Log.d("TAG1432", "onStartTrackingTouch: stop");
+                            int position1 = seekBar.getProgress() * videoViewHolder.videoView.getDuration() / 100;
+                            videoViewHolder.videoView.seekTo(position1);
+                            videoViewHolder.videoView.start();
+                            videoViewHolder.isUpdate = true;
+                        }
+                    });
                 });
                 break;
             case IMG_TYPE:
@@ -272,7 +254,7 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
         ProgressBar loadCircle;
         LinearLayout linearLayout;
         SeekBar seekBar;
-        int lastPos = 0;
+        boolean isUpdate = true;
 
 
         public VideoViewHolder(ItemDetailTypeTwoBinding binding) {
@@ -292,14 +274,6 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
             customMediaController = binding.customMediaController;
             stopButton = binding.customStopButton;
         }
-
-        public int getLastPos() {
-            return lastPos;
-        }
-
-        public void setLastPos(int lastPos) {
-            this.lastPos = lastPos;
-        }
     }
 
     public class ImgViewHolder extends DetailAdapter.ViewHolder{
@@ -314,11 +288,11 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
         }
     }
 
+    @SuppressLint("DefaultLocale")
     private String getStringDuration(int duration){
         int min = duration / 60000;
         int sec = (duration % 60000) / 1000;
-        String durationString = String.format("%02d" , min) + ":" + String.format("%02d" , sec);
-        return durationString;
+        return String.format("%02d" , min) + ":" + String.format("%02d" , sec);
     }
 
     private void playVideo(VideoViewHolder videoViewHolder){
@@ -328,12 +302,12 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
         new Thread(()->{
             while (videoViewHolder.videoView.isPlaying()){
                 int progress = (int) ((float) videoViewHolder.videoView.getCurrentPosition() / (float) videoViewHolder.videoView.getDuration() * (float) 100);
-                if (!videoViewHolder.seekBar.isFocused()){
+                if (videoViewHolder.isUpdate){
                     videoViewHolder.seekBar.setProgress(progress);
+                    activity.runOnUiThread(()->{
+                        videoViewHolder.currentTime.setText(getStringDuration(videoViewHolder.videoView.getCurrentPosition()));
+                    });
                 }
-                activity.runOnUiThread(()->{
-                    videoViewHolder.currentTime.setText(getStringDuration(videoViewHolder.videoView.getCurrentPosition()));
-                });
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {

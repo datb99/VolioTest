@@ -18,19 +18,11 @@ public class HomeFragmentViewPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        Fragment fragment = null;
-        switch (position){
-            case 0:
-            case 2:
-            case 3:
-            case 4:
-                fragment = new OtherFragment();
-                break;
-            case 1:
-                fragment = new ForYouFragment();
-                break;
-            default:
-                break;
+        Fragment fragment;
+        if (position == 1) {
+            fragment = new ForYouFragment();
+        } else {
+            fragment = new OtherFragment();
         }
         return fragment;
     }
