@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.tiendat.voliotest.activity.DetailActivity;
 import com.tiendat.voliotest.api.DetailContent;
 import com.tiendat.voliotest.api.DetailData;
@@ -137,7 +138,7 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
                 VideoViewHolder videoViewHolder = (VideoViewHolder) holder;
                 videoViewHolder.caption.setText(content.getCaption());
                 videoViewHolder.duration.setText(getStringDuration(content.getDuration()));
-                Glide.with(context).load(content.getPrevImg().getHref()).into(videoViewHolder.thumbVideo);
+                Glide.with(context).load(content.getPrevImg().getHref()).diskCacheStrategy(DiskCacheStrategy.NONE).into(videoViewHolder.thumbVideo);
                 videoViewHolder.videoView.setVideoURI(Uri.parse(content.getHref()));
                 videoViewHolder.playButton.setVisibility(View.INVISIBLE);
                 videoViewHolder.loadCircle.setVisibility(View.VISIBLE);
@@ -201,7 +202,7 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
                 imgViewHolder.caption.setText(content.getCaption());
                 int height = parentWidth * content.getOriginalHeight() / content.getOriginalWidth();
                 imgViewHolder.imageView.setLayoutParams(new LinearLayout.LayoutParams(parentWidth , height));
-                Glide.with(context).load(content.getHref()).into(imgViewHolder.imageView);
+                Glide.with(context).load(content.getHref()).diskCacheStrategy(DiskCacheStrategy.NONE).into(imgViewHolder.imageView);
                 break;
         }
     }

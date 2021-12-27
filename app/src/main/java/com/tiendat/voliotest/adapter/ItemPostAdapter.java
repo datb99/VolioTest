@@ -19,6 +19,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.tiendat.voliotest.R;
 import com.tiendat.voliotest.activity.DetailActivity;
 import com.tiendat.voliotest.api.Item;
@@ -70,7 +71,6 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull ItemPostAdapter.ViewHolder holder, int position) {
-
         Item item = items.get(position);
         switch (holder.getItemViewType()){
             case TYPE_ONE:
@@ -91,7 +91,9 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
                         viewHolderTypeOne.imageViews.get(i).setLayoutParams(params);
                         viewHolderTypeOne.imageViews.get(i).setImageResource(android.R.color.transparent);
                         viewHolderTypeOne.imageViews.get(i).setVisibility(View.VISIBLE);
-                        Glide.with(context).load(item.getImages().get(i).getHref()).into(viewHolderTypeOne.imageViews.get(i));
+                        Glide.with(context).load(item.getImages().get(i).getHref())
+                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                .into(viewHolderTypeOne.imageViews.get(i));
                     }
                 }
                 viewHolderTypeOne.title.setOnClickListener(v -> goToDetail());
@@ -105,7 +107,9 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
                 int height =  parentWidth * item.getAvatar().getWidth() / item.getAvatar().getHeight();
                 FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(parentWidth, height);
                 viewHolderTypeTwo.thumbVideo.setLayoutParams(params);
-                Glide.with(context).load(item.getContent().getImage().getHref()).into(viewHolderTypeTwo.thumbVideo);
+                Glide.with(context).load(item.getContent().getImage().getHref())
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .into(viewHolderTypeTwo.thumbVideo);
                 viewHolderTypeTwo.title.setOnClickListener(v -> goToDetail());
                 break;
             case TYPE_THREE:
@@ -115,7 +119,9 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
                 viewHolderTypeThree.date.setText(getTimeString(item.getPublishDate()));
                 viewHolderTypeThree.imageView.setImageDrawable (null);
                 if (item.getAvatar() != null){
-                    Glide.with(context).load(item.getAvatar().getHref()).into(viewHolderTypeThree.imageView);
+                    Glide.with(context).load(item.getAvatar().getHref())
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .into(viewHolderTypeThree.imageView);
                 }else {
                     Glide.with(context).load(AppCompatResources.getDrawable(context , R.drawable.covid)).into(viewHolderTypeThree.imageView);
                 }
