@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -23,6 +24,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.tiendat.voliotest.R;
 import com.tiendat.voliotest.activity.DetailActivity;
 import com.tiendat.voliotest.api.Item;
+import com.tiendat.voliotest.databinding.ItemTypeFourBinding;
 import com.tiendat.voliotest.databinding.ItemTypeOneBinding;
 import com.tiendat.voliotest.databinding.ItemTypeThreeBinding;
 import com.tiendat.voliotest.databinding.ItemTypeTwoBinding;
@@ -40,6 +42,7 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
     private final int TYPE_ONE = 1;
     private final int TYPE_TWO = 2;
     private final int TYPE_THREE = 3;
+    private final int TYPE_FOUR = 4;
 
     public ItemPostAdapter(Context context ,ArrayList<Item> items , int parentWidth){
         this.context = context;
@@ -61,6 +64,10 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
                 ItemTypeThreeBinding bindingThree = ItemTypeThreeBinding
                         .inflate(LayoutInflater.from(parent.getContext()) , parent , false);
                 return new ViewHolderTypeThree(bindingThree);
+            case TYPE_FOUR:
+                ItemTypeFourBinding bindingFour = ItemTypeFourBinding
+                        .inflate(LayoutInflater.from(parent.getContext()) , parent , false);
+                return new ViewHolderTypeFour(bindingFour);
             default:
                 ItemTypeOneBinding bindingOne = ItemTypeOneBinding
                         .inflate(LayoutInflater.from(parent.getContext()) , parent , false);
@@ -127,6 +134,19 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
                 }
                 viewHolderTypeThree.title.setOnClickListener(v -> goToDetail());
                 break;
+            case TYPE_FOUR:
+                ViewHolderTypeFour viewHolderTypeFour = (ViewHolderTypeFour) holder;
+                viewHolderTypeFour.title.setText(item.getTitle());
+                viewHolderTypeFour.name.setText(item.getPublisher().getName());
+                viewHolderTypeFour.date.setText(getTimeString(item.getPublishDate()));
+                ArrayList<String> imageUrls = new ArrayList<>();
+                viewHolderTypeFour.recyclerView.setLayoutParams(new LinearLayout.LayoutParams(parentWidth , parentWidth / 4));
+                for (int i = 0 ; i < item.getImages().size() ; i++){
+                    imageUrls.add(item.getImages().get(i).getHref());
+                }
+                viewHolderTypeFour.recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL , false));
+                viewHolderTypeFour.recyclerView.setAdapter(new ItemTypeFourAdapter(context , imageUrls , parentWidth));
+                break;
         }
     }
 
@@ -145,6 +165,9 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
         }
         if (items.get(position).getImages() == null){
             return TYPE_THREE;
+        }
+        if (items.get(position).getImages().size() > 3){
+            return TYPE_FOUR;
         }
         return TYPE_ONE;
     }
@@ -199,6 +222,21 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
             date = binding.publisherDateTextView;
             name = binding.publisherNameTextView;
             imageView = binding.imageView;
+        }
+    }
+
+    public class ViewHolderTypeFour extends ViewHolder{
+
+        RecyclerView recyclerView;
+        TextView title , date , name;
+        ItemTypeFourAdapter adapter;
+
+        public ViewHolderTypeFour(ItemTypeFourBinding binding) {
+            super(binding.getRoot());
+            recyclerView = binding.recycleView;
+            title = binding.titleTextView;
+            date = binding.publisherDateTextView;
+            name = binding.publisherNameTextView;
         }
     }
 
