@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -42,6 +43,8 @@ import com.tiendat.voliotest.databinding.ItemDetailTypeThreeBinding;
 import com.tiendat.voliotest.databinding.ItemDetailTypeTwoBinding;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder>{
@@ -145,12 +148,23 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
                 Glide.with(context).load(content.getPrevImg().getHref()).into(videoViewHolder.thumbVideo);
                 videoViewHolder.videoView.setVideoURI(Uri.parse(content.getHref()));
                 videoViewHolder.playButton.setVisibility(View.INVISIBLE);
+                videoViewHolder.loadCircle.setVisibility(View.VISIBLE);
+                videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
                 videoViewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (videoViewHolder.customMediaController.getVisibility() == View.VISIBLE){
+                            videoViewHolder.customMediaController.setVisibility(View.INVISIBLE);
+                        }else {
+                            videoViewHolder.customMediaController.setVisibility(View.VISIBLE);
+                        }
+                    }
+                });
+                videoViewHolder.stopButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         if (videoViewHolder.videoView.isPlaying()){
                             videoViewHolder.videoView.pause();
-                            videoViewHolder.loadCircle.setVisibility(View.GONE);
                             videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
                         }
                     }
@@ -160,8 +174,10 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
                     public void onPrepared(MediaPlayer mp) {
                         int height = parentWidth * mp.getVideoHeight() / mp.getVideoWidth();
                         videoViewHolder.container.setLayoutParams(new LinearLayout.LayoutParams(parentWidth , height));
+                        videoViewHolder.durationTime.setText(getStringDuration(videoViewHolder.videoView.getDuration()));
                         videoViewHolder.loadCircle.setVisibility(View.GONE);
                         videoViewHolder.playButton.setVisibility(View.VISIBLE);
+                        videoViewHolder.videoView.seekTo(videoViewHolder.getLastPos());
                         videoViewHolder.playButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -173,7 +189,26 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
                             public void onCompletion(MediaPlayer mp) {
                                 videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
                                 videoViewHolder.loadCircle.setVisibility(View.GONE);
+                                videoViewHolder.customMediaController.setVisibility(View.GONE);
+                            }
+                        });
+                        videoViewHolder.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                            @Override
+                            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                                int position = progress * videoViewHolder.videoView.getDuration() / 100;
+                                videoViewHolder.currentTime.setText(getStringDuration(position));
+                            }
 
+                            @Override
+                            public void onStartTrackingTouch(SeekBar seekBar) {
+
+                            }
+
+                            @Override
+                            public void onStopTrackingTouch(SeekBar seekBar) {
+                                int position = seekBar.getProgress() * videoViewHolder.videoView.getDuration() / 100;
+                                videoViewHolder.videoView.seekTo(position);
+                                videoViewHolder.videoView.start();
                             }
                         });
                     }
@@ -192,16 +227,6 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
     @Override
     public int getItemCount() {
         return data.getSections().size();
-    }
-
-    @Override
-    public void onViewRecycled(@NonNull ViewHolder holder) {
-        super.onViewRecycled(holder);
-        if (holder.getItemViewType() == VIDEO_TYPE){
-            VideoViewHolder videoViewHolder = (VideoViewHolder) holder;
-            videoViewHolder.videoView.pause();
-            videoViewHolder.frameLayout.setVisibility(View.VISIBLE);
-        }
     }
 
     @Override
@@ -239,13 +264,15 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
 
     public class VideoViewHolder extends DetailAdapter.ViewHolder{
 
-        TextView caption , duration;
+        TextView caption , duration , currentTime , durationTime;
         ImageView thumbVideo ;
         VideoView videoView;
-        FrameLayout container , frameLayout;
-        ImageButton playButton;
+        FrameLayout container , frameLayout , customMediaController;
+        ImageButton playButton , stopButton;
         ProgressBar loadCircle;
         LinearLayout linearLayout;
+        SeekBar seekBar;
+        int lastPos = 0;
 
 
         public VideoViewHolder(ItemDetailTypeTwoBinding binding) {
@@ -259,6 +286,19 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
             playButton = binding.playButton;
             loadCircle = binding.loadCircle;
             linearLayout = binding.mLinearLayout;
+            seekBar = binding.customSeekbar;
+            currentTime = binding.currentTime;
+            durationTime = binding.durationTime;
+            customMediaController = binding.customMediaController;
+            stopButton = binding.customStopButton;
+        }
+
+        public int getLastPos() {
+            return lastPos;
+        }
+
+        public void setLastPos(int lastPos) {
+            this.lastPos = lastPos;
         }
     }
 
@@ -277,25 +317,30 @@ public class DetailAdapter extends RecyclerView.Adapter<DetailAdapter.ViewHolder
     private String getStringDuration(int duration){
         int min = duration / 60000;
         int sec = (duration % 60000) / 1000;
-        int millis = ((duration % 60000) % 1000) / 10;
-        String durationString = String.format("%02d" , min) + ":" + String.format("%02d" , sec) + ":" + String.format("%02d" , millis);
+        String durationString = String.format("%02d" , min) + ":" + String.format("%02d" , sec);
         return durationString;
     }
 
     private void playVideo(VideoViewHolder videoViewHolder){
-        videoViewHolder.loadCircle.setVisibility(View.VISIBLE);
+        videoViewHolder.customMediaController.setVisibility(View.GONE);
         videoViewHolder.frameLayout.setVisibility(View.GONE);
-        if (!videoViewHolder.videoView.isActivated()){
-            videoViewHolder.videoView.start();
-        }else {
-            videoViewHolder.videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    videoViewHolder.loadCircle.setVisibility(View.GONE);
-                    videoViewHolder.videoView.start();
+        videoViewHolder.videoView.start();
+        new Thread(()->{
+            while (videoViewHolder.videoView.isPlaying()){
+                int progress = (int) ((float) videoViewHolder.videoView.getCurrentPosition() / (float) videoViewHolder.videoView.getDuration() * (float) 100);
+                if (!videoViewHolder.seekBar.isFocused()){
+                    videoViewHolder.seekBar.setProgress(progress);
                 }
-            });
-        }
+                activity.runOnUiThread(()->{
+                    videoViewHolder.currentTime.setText(getStringDuration(videoViewHolder.videoView.getCurrentPosition()));
+                });
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
 }

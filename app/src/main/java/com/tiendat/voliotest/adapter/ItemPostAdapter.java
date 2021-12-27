@@ -127,7 +127,6 @@ public class ItemPostAdapter extends RecyclerView.Adapter<ItemPostAdapter.ViewHo
                 viewHolderTypeThree.title.setOnClickListener(v -> goToDetail());
                 break;
         }
-
     }
 
     @Override
